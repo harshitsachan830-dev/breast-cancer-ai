@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Breast Cancer Prediction Using ML</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #08112b, #0f1b46);
+    color: white;
+    min-height: 100vh;
+    overflow-y: auto;
+    padding: 30px 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hero {
+    width: 100%;
+    max-width: 900px;
+    text-align: center;
+    margin: 0 auto 28px auto;
+    padding: 22px 24px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.25);
+}
+
+.hero h1 {
+    font-size: 38px;
+    margin-bottom: 10px;
+}
+
+.hero p {
+    font-size: 15px;
+    color: #d1d5db;
+    line-height: 1.6;
+}
+
+.dashboard {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 420px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.card {
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 18px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.22);
+    backdrop-filter: blur(10px);
+}
+
+.form-card {
+    position: sticky;
+    top: 20px;
+}
+
+.result-card {
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* scrollbar */
+.result-card::-webkit-scrollbar {
+    width: 8px;
+}
+
+.result-card::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.08);
+    border-radius: 10px;
+}
+
+.result-card::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.25);
+    border-radius: 10px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #f3f4f6;
+}
+
+input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.08);
+    color: white;
+    outline: none;
+}
+
+input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96,165,250,0.18);
+}
+
+.btn {
+    width: 100%;
+    margin-top: 16px;
+    border: none;
+    border-radius: 12px;
+    padding: 13px 16px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    background: linear-gradient(90deg, #2563eb, #7c3aed);
+}
+
+.footer-note {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #d1d5db;
+    line-height: 1.6;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+}
+
+.prediction-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.06);
+}
+
+.prediction-title {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.prediction-badge {
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-weight: bold;
+    color: white;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin: 18px 0;
+}
+
+.stat {
+    background: rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+}
+
+.stat h4 {
+    font-size: 13px;
+    margin-bottom: 8px;
+    color: #d1d5db;
+}
+
+.stat p {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.risk-level-box,
+.explanation,
+.doctor-box,
+.rule-box,
+.chart-box {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.08);
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 18px;
+}
+
+.chart-wrap,
+.gauge-wrap {
+    position: relative;
+    width: 100%;
+    height: 260px;
+}
+
+.gauge-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+.live-bar-area {
+    margin-top: 12px;
+}
+
+.live-row {
+    margin-bottom: 14px;
+}
+
+.live-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.live-track {
+    width: 100%;
+    height: 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.12);
+    overflow: hidden;
+}
+
+.live-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 999px;
+    transition: width 1.2s ease;
+}
+
+@media (max-width: 1100px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .form-card {
+        position: static;
+    }
+
+    .result-card {
+        max-height: none;
+        overflow-y: visible;
+    }
+}
+
+@media (max-width: 700px) {
+    .grid,
+    .charts-grid,
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero h1 {
+        font-size: 28px;
+    }
+
+    .prediction-title {
+        font-size: 22px;
+    }
+}
+</style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>Breast Cancer Risk Prediction Dashboard</h1>
+            <p>
+                Hackathon-level smart dashboard with live animated charts, gauge meter, pie chart,
+                AI-style explanation, PDF report download, and doctor recommendation system.
+            </p>
+        </div>
+
+        <div class="dashboard">
+            <div class="card form-card">
+                <h2>Enter Patient Values</h2>
+
+                <form method="POST">
+                    <div class="grid">
+                        {% for feature in features %}
+                        <div class="field">
+                            <label>
+                                {% if feature == 'mean radius' %}Mean Radius
+                                {% elif feature == 'mean texture' %}Mean Texture
+                                {% elif feature == 'mean perimeter' %}Mean Perimeter
+                                {% elif feature == 'mean area' %}Mean Area
+                                {% elif feature == 'mean smoothness' %}Mean Smoothness
+                                {% elif feature == 'mean compactness' %}Mean Compactness
+                                {% else %}{{ feature }}
+                                {% endif %}
+                            </label>
+
+                            <input
+                                type="number"
+                                step="any"
+                                name="{{ feature }}"
+                                value="{{ entered_values.get(feature, '') }}"
+                                placeholder="{% if feature == 'mean radius' %}14.0{% elif feature == 'mean texture' %}20.0{% elif feature == 'mean perimeter' %}90.0{% elif feature == 'mean area' %}600.0{% elif feature == 'mean smoothness' %}0.10{% elif feature == 'mean compactness' %}0.15{% endif %}"
+                                required
+                            />
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <button class="btn btn-primary" type="submit">Predict Cancer Risk</button>
+                </form>
+
+                <div class="footer-note">
+                    <strong>Risk Rule:</strong>
+                    Below 30% = Low Risk,
+                    30% to 69.99% = Moderate Risk,
+                    70% and above = High Risk.
+                </div>
+            </div>
+
+            <div class="card result-card" id="reportSection">
+                <h2>Prediction Result</h2>
+
+                {% if result %}
+                    {% if result.error %}
+                        <div class="error">{{ result.error }}</div>
+                    {% else %}
+                        <div class="prediction-strip"
+                             style="box-shadow: 0 0 0 1px {{ result.theme.primary|default('#16a34a') }}40, 0 18px 30px {{ result.theme.shadow|default('rgba(0,0,0,0.25)') }};">
+                            <div>
+                                <div class="prediction-title" style="color: {{ result.theme.primary|default('#16a34a') }};">
+                                    Final Prediction: {{ result.prediction }}
+                                </div>
+                                <div style="margin-top: 6px; color: #cbd5e1;">
+                                    Intelligent ML-based risk analysis
+                                </div>
+                            </div>
+
+                            <div class="prediction-badge" style="background: {{ result.theme.primary|default('#16a34a') }};">
+                                {{ result.risk_level }}
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat">
+                                <h4>Benign Probability</h4>
+                                <p id="benignStat">{{ result.benign_percentage }}%</p>
+                            </div>
+                            <div class="stat">
+                                <h4>Malignant Probability</h4>
+                                <p id="malignantStat">{{ result.malignant_percentage }}%</p>
+                            </div>
+                            <div class="stat">
+                                <h4>Overall Risk</h4>
+                                <p id="riskStat" style="color: {{ result.theme.primary|default('#16a34a') }};">{{ result.risk_percentage }}%</p>
+                            </div>
+                        </div>
+
+                        <div class="risk-level-box"
+                             style="background: {{ result.theme.secondary|default('rgba(255,255,255,0.10)') }}; color: {{ result.theme.text|default('#f8fafc') }};">
+                            Risk Level: {{ result.risk_level }}
+                        </div>
+
+                       <div class="top-actions">
+    <form action="/download_pdf" method="post">
+        <input type="hidden" name="result" value='{{ result | tojson }}'>
+        <button class="btn btn-secondary" type="submit">Download PDF Report</button>
+    </form>
+</div>
+
+                        <div class="charts-grid">
+                            <div class="chart-box">
+                                <h3>Gauge Meter</h3>
+                                <div class="gauge-wrap">
+                                    <canvas id="gaugeChart"></canvas>
+                                    <div class="gauge-center">
+                                        <div class="gauge-value" id="gaugeValue">{{ result.risk_percentage }}%</div>
+                                        <div class="gauge-label">Cancer Risk</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="chart-box">
+                                <h3>Pie Chart</h3>
+                                <div class="chart-wrap">
+                                    <canvas id="pieChart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="chart-box">
+                                <h3>Animated Comparison Graph</h3>
+                                <div class="chart-wrap">
+                                    <canvas id="barChart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="chart-box">
+                                <h3>Live Updating Risk Bars</h3>
+                                <div class="live-bar-area">
+                                    <div class="live-row">
+                                        <div class="live-header">
+                                            <span>Benign</span>
+                                            <span id="liveBenignText">{{ result.benign_percentage }}%</span>
+                                        </div>
+                                        <div class="live-track">
+                                            <div class="live-fill" id="liveBenignFill" style="background: #22c55e;"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="live-row">
+                                        <div class="live-header">
+                                            <span>Malignant</span>
+                                            <span id="liveMalignantText">{{ result.malignant_percentage }}%</span>
+                                        </div>
+                                        <div class="live-track">
+                                            <div class="live-fill" id="liveMalignantFill" style="background: {{ result.theme.primary|default('#16a34a') }};"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="live-row">
+                                        <div class="live-header">
+                                            <span>Overall Risk</span>
+                                            <span id="liveRiskText">{{ result.risk_percentage }}%</span>
+                                        </div>
+                                        <div class="live-track">
+                                            <div class="live-fill" id="liveRiskFill" style="background: {{ result.theme.primary|default('#16a34a') }};"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="explanation" style="border-left: 5px solid {{ result.theme.primary|default('#16a34a') }};">
+                            <h3 style="margin-bottom: 8px;">AI Explanation</h3>
+                            <p>{{ result.ai_explanation }}</p>
+                        </div>
+
+                        <div class="doctor-box" style="border-left: 5px solid {{ result.theme.primary|default('#16a34a') }};">
+                            <h3 style="margin-bottom: 8px;">Doctor Recommendation System</h3>
+                            <p>{{ result.doctor_recommendation }}</p>
+                        </div>
+
+                        <div class="rule-box">
+                            <h3 style="margin-bottom: 8px;">Important Note</h3>
+                            <p>
+                                This system is for educational and hackathon demonstration use only.
+                                It does not replace medical diagnosis.
+                            </p>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="rule-box">
+                        <h3 style="margin-bottom: 8px;">Ready for Prediction</h3>
+                        <p>
+                            Fill the six medical inputs and click predict to generate the full smart dashboard,
+                            animated graphs, live bars, gauge meter, explanation, and doctor suggestion.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if result and not result.error %}
+    <script>
+        function downloadPDF() {
+            window.print();
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const rawChartData = {{ chart_data_json | default('{}') | safe }};
+            const chartData = rawChartData || {};
+
+            const clamp = (value) => {
+                const number = Number(value);
+                if (Number.isNaN(number)) return 0;
+                return Math.max(0, Math.min(100, number));
+            };
+
+            const riskPercentage = clamp(chartData.risk);
+            const benignPercentage = clamp(chartData.benign);
+            const malignantPercentage = clamp(chartData.malignant);
+
+            let primaryColor = "#16a34a";
+            if (riskPercentage >= 70) {
+                primaryColor = "#dc2626";
+            } else if (riskPercentage >= 30) {
+                primaryColor = "#f59e0b";
+            }
+
+            const pieCanvas = document.getElementById("pieChart");
+            const barCanvas = document.getElementById("barChart");
+            const gaugeCanvas = document.getElementById("gaugeChart");
+
+            if (pieCanvas) {
+                new Chart(pieCanvas, {
+                    type: "pie",
+                    data: {
+                        labels: ["Benign", "Malignant"],
+                        datasets: [{
+                            data: [benignPercentage, malignantPercentage],
+                            backgroundColor: ["#22c55e", primaryColor],
+                            borderWidth: 2,
+                            borderColor: "#0f172a"
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            animateRotate: true,
+                            duration: 1800
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: "#e2e8f0"
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (barCanvas) {
+                new Chart(barCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: ["Benign", "Malignant", "Risk"],
+                        datasets: [{
+                            label: "Percentage",
+                            data: [benignPercentage, malignantPercentage, riskPercentage],
+                            backgroundColor: ["#22c55e", primaryColor, primaryColor],
+                            borderRadius: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 2200
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    color: "#cbd5e1"
+                                },
+                                grid: {
+                                    color: "rgba(255,255,255,0.08)"
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: "#cbd5e1"
+                                },
+                                grid: {
+                                    color: "rgba(255,255,255,0.04)"
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: "#e2e8f0"
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (gaugeCanvas) {
+                new Chart(gaugeCanvas, {
+                    type: "doughnut",
+                    data: {
+                        datasets: [{
+                            data: [riskPercentage, 100 - riskPercentage],
+                            backgroundColor: [primaryColor, "rgba(255,255,255,0.12)"],
+                            borderWidth: 0,
+                            circumference: 180,
+                            rotation: 270,
+                            cutout: "72%"
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 2200
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            setTimeout(() => {
+                const liveBenignFill = document.getElementById("liveBenignFill");
+                const liveMalignantFill = document.getElementById("liveMalignantFill");
+                const liveRiskFill = document.getElementById("liveRiskFill");
+
+                if (liveBenignFill) liveBenignFill.style.width = benignPercentage + "%";
+                if (liveMalignantFill) liveMalignantFill.style.width = malignantPercentage + "%";
+                if (liveRiskFill) liveRiskFill.style.width = riskPercentage + "%";
+            }, 300);
+
+            function animateValue(id, start, end, duration, suffix = "%") {
+                const element = document.getElementById(id);
+                if (!element) return;
+
+                let startTime = null;
+
+                function step(timestamp) {
+                    if (!startTime) startTime = timestamp;
+                    const progress = Math.min((timestamp - startTime) / duration, 1);
+                    const value = (progress * (end - start) + start).toFixed(2);
+                    element.innerText = value + suffix;
+                    if (progress < 1) requestAnimationFrame(step);
+                }
+
+                requestAnimationFrame(step);
+            }
+
+            function animateLiveText(id, end) {
+                const element = document.getElementById(id);
+                if (!element) return;
+
+                let startTime = null;
+                function step(timestamp) {
+                    if (!startTime) startTime = timestamp;
+                    const progress = Math.min((timestamp - startTime) / 1600, 1);
+                    const value = (progress * end).toFixed(2);
+                    element.innerText = value + "%";
+                    if (progress < 1) requestAnimationFrame(step);
+                }
+                requestAnimationFrame(step);
+            }
+
+            animateValue("benignStat", 0, benignPercentage, 1800);
+            animateValue("malignantStat", 0, malignantPercentage, 1800);
+            animateValue("riskStat", 0, riskPercentage, 1800);
+            animateValue("gaugeValue", 0, riskPercentage, 2000);
+
+            animateLiveText("liveBenignText", benignPercentage);
+            animateLiveText("liveMalignantText", malignantPercentage);
+            animateLiveText("liveRiskText", riskPercentage);
+        });
+    </script>
+    {% else %}
+    <script>
+        function downloadPDF() {
+            window.print();
+        }
+    </script>
+    {% endif %}
+</body>
+</html>
